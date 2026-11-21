@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitsune Manga Store | Catálogo y Carrito</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="container topbar-content">
+            <div class="brand">
+                <span class="brand-badge">MANGA SHOP</span>
+                <h1>Kitsune Manga Store</h1>
+            </div>
+
+            <div class="topbar-actions">
+                <button id="btn-open-cart" class="btn btn-secondary cart-trigger" type="button">
+                    Carrito (<span id="cart-count">0</span>)
+                </button>
+                <button id="btn-toggle-admin" class="btn btn-primary" type="button">
+                    Panel de Administrador
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <div id="global-alert" class="alert hidden" role="alert"></div>
+
+        <!-- VISTA PÚBLICA EN CARDS POR CATEGORÍA -->
+        <section id="public-view" class="view-section">
+            <div class="filters-card">
+                <div class="filter-group search-group">
+                    <label for="search-input">Buscar por título o autor</label>
+                    <input type="search" id="search-input" placeholder="Ej. Berserk, Kentaro Miura, Chainsaw Man..."
+                        autocomplete="off">
+                </div>
+
+                <div class="filter-group">
+                    <label for="genre-filter">Categoría / Género</label>
+                    <select id="genre-filter">
+                        <option value="Todos">Todos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="status-filter">Estado de publicación</label>
+                    <select id="status-filter">
+                        <option value="Todos">Todos</option>
+                        <option value="En emisión">En emisión</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                        <option value="En pausa">En pausa</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loading-public" class="loader-box hidden">
+                <div class="spinner"></div>
+                <p>Cargando catálogo de mangas...</p>
+            </div>
+
+            <!-- Contenedor de secciones separadas por categoría -->
+            <div id="categories-container" class="categories-wrapper"></div>
+
+            <p id="empty-public-msg" class="empty-state hidden">
+                No se encontraron mangas que coincidan con los filtros seleccionados.
+            </p>
+        </section>
+
+        <!-- VISTA DE ADMINISTRADOR -->
+        <section id="admin-view" class="view-section hidden">
+            <div id="admin-login-box" class="login-card">
+                <h2>Acceso al Panel de Administrador</h2>
+                <p class="login-subtitle">Ingresa tus credenciales para gestionar el inventario.</p>
+
+                <div id="login-error" class="alert alert-error hidden"></div>
+
+                <form id="login-form" novalidate>
+                    <div class="form-group">
+                        <label for="admin-user">Usuario</label>
+                        <input type="text" id="admin-user" required placeholder="admin" autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin-pass">Contraseña</label>
+                        <input type="password" id="admin-pass" required placeholder="••••"
+                            autocomplete="current-password">
+                    </div>
+
+                    <div class="login-actions">
+                        <button type="submit" class="btn btn-primary btn-full">Iniciar Sesión</button>
+                        <button type="button" id="btn-back-store" class="btn btn-secondary btn-full">
+                            Volver a la tienda
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="admin-dashboard" class="hidden">
+                <div class="admin-header">
+                    <div>
+                        <h2>Gestión de Inventario (CRUD)</h2>
+                        <p class="admin-subtitle">Administración de productos de la tienda</p>
+                    </div>
+                    <div class="admin-header-buttons">
+                        <button id="btn-back-store-auth" class="btn btn-secondary" type="button">
+                            Ver Tienda Pública
+                        </button>
+                        <button id="btn-logout" class="btn btn-danger" type="button">
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+
+                <div class="crud-form-card">
+                    <h3 id="form-title">Agregar Nuevo Manga</h3>
+                    <div id="form-error" class="alert alert-error hidden"></div>
+
+                    <form id="manga-form" novalidate>
+                        <input type="hidden" id="manga-id">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="titulo">Título *</label>
+                                <input type="text" id="titulo" required placeholder="Ej. Vagabond Vol. 1">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="autor">Autor *</label>
+                                <input type="text" id="autor" required placeholder="Ej. Takehiko Inoue">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="genero">Categoría / Género *</label>
+                                <input type="text" id="genero" list="categories-datalist" required
+                                    placeholder="Ej. Seinen">
+                                <datalist id="categories-datalist"></datalist>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="estado">Estado *</label>
+                                <select id="estado" required>
+                                    <option value="En emisión">En emisión</option>
+                                    <option value="Finalizado">Finalizado</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                    <option value="En pausa">En pausa</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="precio">Precio (Bs) *</label>
+                                <input type="number" id="precio" step="0.01" min="0" required placeholder="85.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stock">Stock (unidades) *</label>
+                                <input type="number" id="stock" step="1" min="0" required placeholder="25">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="capitulos">Capítulos *</label>
+                                <input type="number" id="capitulos" step="1" min="1" required placeholder="327">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="imagen">URL de Imagen *</label>
+                                <input type="url" id="imagen" required placeholder="https://ejemplo.com/portada.jpg">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="descripcion">Descripción completa *</label>
+                            <textarea id="descripcion" rows="3" required
+                                placeholder="Sinopsis detallada del manga..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" id="btn-submit-manga" class="btn btn-primary">
+                                Guardar Manga
+                            </button>
+                            <button type="button" id="btn-cancel-edit" class="btn btn-secondary hidden">
+                                Cancelar Edición
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="manga-table admin-table">
+                        <thead>
+                            <tr>
+                                <th>Portada</th>
+                                <th>Título</th>
+                                <th>Autor</th>
+                                <th>Categoría</th>
+                                <th>Estado</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- PANEL LATERAL DEL CARRITO DE COMPRAS -->
+    <div id="cart-drawer-backdrop" class="drawer-backdrop hidden" aria-hidden="true">
+        <aside id="cart-drawer" class="cart-drawer" role="dialog" aria-modal="true" aria-label="Carrito de compras">
+            <div class="cart-header">
+                <h2>Tu Carrito</h2>
+                <button id="btn-close-cart" class="modal-close" type="button"
+                    aria-label="Cerrar carrito">&times;</button>
+            </div>
+
+            <div id="cart-items" class="cart-items"></div>
+
+            <div class="cart-footer">
+                <div class="cart-summary-row">
+                    <span>Total a pagar:</span>
+                    <strong id="cart-total" class="price-cell">Bs 0.00</strong>
+                </div>
+                <div class="cart-actions">
+                    <button id="btn-clear-cart" class="btn btn-secondary" type="button">
+                        Vaciar
+                    </button>
+                    <button id="btn-checkout" class="btn btn-primary btn-grow" type="button">
+                        Confirmar compra
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- MODAL DE DETALLE DEL MANGA -->
+    <div id="detail-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-card">
+            <button id="btn-close-modal" class="modal-close" type="button" aria-label="Cerrar detalle">&times;</button>
+            <div class="modal-body">
+                <div class="modal-image-col">
+                    <img id="modal-img" src="" alt="Portada del manga">
+                </div>
+                <div class="modal-info-col">
+                    <div class="modal-badges">
+                        <span id="modal-status-badge" class="status-badge"></span>
+                        <span id="modal-genre-badge" class="genre-pill"></span>
+                    </div>
+                    <h2 id="modal-title"></h2>
+                    <p class="modal-author">Por <strong id="modal-author"></strong></p>
+
+                    <div class="modal-stats">
+                        <div class="stat-box">
+                            <span class="stat-label">Precio</span>
+                            <span id="modal-price" class="stat-value price-text"></span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Disponibilidad</span>
+                            <span id="modal-stock" class="stat-value"></span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Capítulos del manga</span>
+                            <span id="modal-chapters" class="stat-value"></span>
+                        </div>
+                    </div>
+
+                    <div class="modal-buy-box">
+                        <button id="btn-modal-add-cart" class="btn btn-primary" type="button">
+                            Agregar al carrito
+                        </button>
+                    </div>
+
+                    <div class="modal-description-box">
+                        <h3>Sinopsis</h3>
+                        <p id="modal-description"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE COMPRA REALIZADA -->
+    <div id="sale-success-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+        aria-labelledby="sale-modal-title">
+        <div class="modal-card sale-modal-card">
+            <button id="btn-close-sale-modal" class="modal-close" type="button" aria-label="Cerrar">&times;</button>
+            <h2 id="sale-modal-title">Compra realizada con éxito</h2>
+            <p id="sale-modal-detail" class="sale-modal-detail"></p>
+            <button id="btn-accept-sale-modal" class="btn btn-primary" type="button">
+                Aceptar
+            </button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
